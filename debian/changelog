@@ -1,0 +1,38 @@
+python-resolvelib (0.5.4-1) unstable; urgency=medium
+
+  [ Stefano Rivera ]
+  * Team Upload.
+  * New upstream release.
+
+  [ Scott Kitterman ]
+  * Add autopkgtest to run upstream test suite
+
+  [ Ondřej Nový ]
+  * d/control: Update Maintainer field with new Debian Python Team
+    contact address.
+  * d/control: Update Vcs-* fields with new Debian Python Team Salsa
+    layout.
+
+  [ Debian Janitor ]
+  * Trim trailing whitespace.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+  * Update watch file format version to 4.
+
+  [ Stefano Rivera ]
+  * Set upstream metadata fields: Changelog, Registry.
+  * Declare: Rules-Requires-Root: no.
+
+ -- Stefano Rivera <stefanor@debian.org>  Mon, 01 Mar 2021 13:04:34 -0800
+
+python-resolvelib (0.3.0-2) unstable; urgency=medium
+
+  * Source only upload
+
+ -- Scott Kitterman <scott@kitterman.com>  Sun, 03 May 2020 02:13:18 -0400
+
+python-resolvelib (0.3.0-1) unstable; urgency=medium
+
+  * Initial release (Closes: #959397)
+
+ -- Scott Kitterman <scott@kitterman.com>  Sat, 02 May 2020 02:51:20 -0400
