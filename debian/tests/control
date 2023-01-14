@@ -1,0 +1,7 @@
+Tests: run-pytest
+Depends: @, python3-all, python3-pytest, python3-commentjson
+Restrictions: allow-stderr
+
+Tests: hint-testsuite-triggers
+Depends: python3-packaging
+Restrictions: hint-testsuite-triggers
