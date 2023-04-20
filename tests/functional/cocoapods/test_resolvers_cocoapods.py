@@ -5,13 +5,12 @@ import os
 import re
 import string
 
-import commentjson
+import commentjson  # type: ignore
 import packaging.specifiers
 import packaging.version
 import pytest
 
 from resolvelib import AbstractProvider, ResolutionImpossible, Resolver
-
 
 Requirement = collections.namedtuple("Requirement", "name spec")
 Candidate = collections.namedtuple("Candidate", "name ver deps")
@@ -105,17 +104,27 @@ class CocoaPodsInputProvider(AbstractProvider):
     def identify(self, requirement_or_candidate):
         return requirement_or_candidate.name
 
-    def get_preference(self, resolution, candidates, information):
-        return len(candidates)
+    def get_preference(
+        self,
+        identifier,
+        resolutions,
+        candidates,
+        information,
+        backtrack_causes,
+    ):
+        return sum(1 for _ in candidates[identifier])
 
-    def _iter_matches(self, name, requirements):
+    def _iter_matches(self, name, requirements, incompatibilities):
         try:
             data = self.index[name]
         except KeyError:
             return
+        bad_versions = {c.ver for c in incompatibilities[name]}
         for entry in data:
             version = packaging.version.parse(entry["version"])
-            if any(version not in r.spec for r in requirements):
+            if any(version not in r.spec for r in requirements[name]):
+                continue
+            if version in bad_versions:
                 continue
             # Some fixtures incorrectly set dependencies to an empty list.
             dependencies = entry["dependencies"] or {}
@@ -125,14 +134,14 @@ class CocoaPodsInputProvider(AbstractProvider):
             ]
             yield Candidate(entry["name"], version, dependencies)
 
-    def find_matches(self, requirements):
-        name = requirements[0].name
+    def find_matches(self, identifier, requirements, incompatibilities):
+
         candidates = sorted(
-            self._iter_matches(name, requirements),
+            self._iter_matches(identifier, requirements, incompatibilities),
             key=operator.attrgetter("ver"),
             reverse=True,
         )
-        pinned = self.pinned_versions.get(name)
+        pinned = self.pinned_versions.get(identifier)
         for c in candidates:
             if pinned is not None and c.ver != pinned:
                 continue

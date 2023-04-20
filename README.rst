@@ -56,8 +56,8 @@ Version
 -------
 
 A string, usually in a number form, describing a snapshot of a Package. This
-number should increase when a Package post a new snapshot, i.e. a higher number
-means a more up-to-date snapshot.
+number should increase when a Package posts a new snapshot,
+i.e a higher number means a more up-to-date snapshot.
 
 Specifier
 ---------
@@ -83,3 +83,8 @@ An intention to acquire a needed package, i.e. an "abstract requirement". A
 "dependency", if not clarified otherwise, also refers to this concept.
 
 A Requirement should specify two things: a Package, and a Specifier.
+
+Contributing
+============
+
+Please see `developer documentation <./DEVELOPMENT.rst>`__.

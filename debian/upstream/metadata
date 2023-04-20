@@ -1,9 +1,0 @@
----
-Bug-Database: https://github.com/sarugaku/resolvelib/issues
-Bug-Submit: https://github.com/sarugaku/resolvelib/issues/new
-Changelog: https://github.com/sarugaku/resolvelib/blob/master/CHANGELOG.rst
-Registry:
-  - Name: PyPI
-    Entry: resolvelib
-Repository: https://github.com/sarugaku/resolvelib.git
-Repository-Browse: https://github.com/sarugaku/resolvelib

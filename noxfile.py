@@ -4,7 +4,6 @@ import pathlib
 
 import nox
 
-
 ROOT = pathlib.Path(__file__).resolve().parent
 
 INIT_PY = ROOT.joinpath("src", "resolvelib", "__init__.py")
@@ -15,10 +14,12 @@ nox.options.reuse_existing_virtualenvs = True
 
 @nox.session
 def lint(session):
-    session.install(".[lint]")
+    session.install(".[lint, test]")
 
     session.run("black", "--check", ".")
+    session.run("isort", ".")
     session.run("flake8", ".")
+    session.run("mypy", "src", "tests")
 
 
 @nox.session(python=["3.9", "3.8", "3.7", "3.6", "3.5", "2.7"])
@@ -43,6 +44,15 @@ def _write_package_version(v):
 
     with INIT_PY.open("w", newline="\n") as f:
         f.write("".join(lines))
+
+
+SAFE_RMTREE = """
+import os
+import shutil
+
+if os.path.isdir({path!r}):
+    shutil.rmtree({path!r})
+"""
 
 
 @nox.session
@@ -72,7 +82,7 @@ def release(session):
 
     if options.version:
         _write_package_version(options.version)
-        session.run("towncrier", "--version", options.version)
+        session.run("towncrier", "build", "--version", options.version)
         session.run(
             "git",
             "commit",
@@ -93,12 +103,25 @@ def release(session):
     else:
         session.log("Skipping preprocessing since --version is empty")
 
+    session.log("Cleaning dist/ content...")
+    session.run("python", "-c", SAFE_RMTREE.format(path="dist"))
+
+    session.log("Building distributions...")
+    session.run("python", "-m", "build")
+    session.run("twine", "check", "dist/*")
+
     if options.repo:
         session.log(f"Releasing distributions to {options.repo}...")
-        session.run("setl", "publish", "--repository", options.repo)
     else:
-        session.log("Building distributions locally since --repo is empty")
-        session.run("setl", "publish", "--no-upload")
+        session.log("Storing distributions locally since --repo is empty")
+    if options.repo:
+        session.run(
+            "twine",
+            "upload",
+            "--repository-url",
+            options.repo,
+            "dist/*",
+        )
 
     if options.prebump:
         _write_package_version(options.prebump)
