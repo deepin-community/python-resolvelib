@@ -1,3 +1,109 @@
+0.9.0 (2022-11-17)
+==================
+
+Features
+--------
+
+- A new reporter hook ``rejecting_candidate`` is added, replacing ``backtracking``.
+  The hook is called every time the resolver rejects a conflicting candidate before
+  trying out the next one in line.  `#101 <https://github.com/sarugaku/resolvelib/issues/101>`_
+  
+
+Bug Fixes
+---------
+
+- Some valid states that were previously rejected are now accepted. This affects
+  states where multiple candidates for the same dependency conflict with each
+  other. The ``information`` argument passed to
+  ``AbstractProvider.get_preference`` may now contain empty iterators. This has
+  always been allowed by the method definition but it was previously not possible
+  in practice.  `#91 <https://github.com/sarugaku/resolvelib/issues/91>`_
+
+
+0.8.1 (2021-10-12)
+==================
+
+Features
+--------
+
+- A new reporter hook ``resolving_conflicts`` is added. The resolver triggers
+  this hook when it detects conflicts in the dependency tree, and before it
+  attempts to fix them. The hook accepts one single argument ``causes``, which
+  is a list of ``(requirement, parent)`` 2-tuples that represents all the
+  edges that lead to the detected conflicts.  `#81 <https://github.com/sarugaku/resolvelib/issues/81>`_
+
+
+0.8.0 (2021-10-08)
+==================
+
+Features
+--------
+
+- Add ``backtrack_causes`` to ``get_preference``, which contains information
+  about the requirements involved in the most recent backtrack. This allows
+  the provider to utilise this information to tweak the ordering as well as
+  for recording/reporting conflicts.
+
+
+0.7.1 (2021-06-22)
+==================
+
+Bug Fixes
+---------
+
+- When merging a candidate's dependencies, make sure the merge target is
+  up-to-date within the loop, so the merge does not lose information when a
+  candidate returns multiple dependency specifications under one identifier
+  (e.g. specifyiung two dependencies ``a>1`` and ``a<2``, instead of one single
+  ``a>1,<2`` dependency).  `#80 <https://github.com/sarugaku/resolvelib/issues/80>`_
+
+
+0.7.0 (2021-04-13)
+==================
+
+Features
+--------
+
+- Redesign ``get_preference()`` to include resolution state on dependencies
+  other than the currently working one, to allow the provider to better take
+  account of the global resolver knowledge and determine the best strategy. The
+  provider now can, for example, correctly calculate how far a dependency is
+  from the root node in the graph.  `#74 <https://github.com/sarugaku/resolvelib/issues/74>`_
+
+
+0.6.0 (2021-04-04)
+==================
+
+Features
+--------
+
+- A new argument ``incompatibilities`` is now passed to the ``find_matches()``
+  hook, which the provider must use to exclude matches from the return value.  `#68 <https://github.com/sarugaku/resolvelib/issues/68>`_
+
+- Redesign ``find_matches()`` to include resolution state on dependencies other
+  than the currently working one, to handle usages that need to return candidates
+  based on non-local states. One such example is PEP 508 direct URLs specified
+  on a package, which need to be available to the same package specified with
+  extras (which would have a different identifier).  `#74 <https://github.com/sarugaku/resolvelib/issues/74>`_
+
+
+Bug Fixes
+---------
+
+- The resolver no longer relies on implicit candidate equality to detect
+  incompatibilities. This is done by an additional ``find_matches()`` argument;
+  see the *Features* section to learn more.  `#68 <https://github.com/sarugaku/resolvelib/issues/68>`_
+
+
+0.5.5 (2021-03-09)
+==================
+
+Features
+--------
+
+- Provide type stubs for most classes.  `#72 <https://github.com/sarugaku/resolvelib/issues/72>`_
+
+
 0.5.4 (2020-12-27)
 ==================
 

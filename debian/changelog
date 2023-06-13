@@ -1,3 +1,34 @@
+python-resolvelib (0.9.0-2) unstable; urgency=medium
+
+  * Add d/patch/fix_tests.patch to remediate inappropriate test failures
+    caused by changes in python-packaging (Closes: #1027606)
+  * Add hint-testsuite-triggers to d/tests/control so that if
+    python3-packaging is updated, python-resolvelib autopkgtest will be
+    triggered
+  * Bump standards-version to 4.6.2 without further change
+
+ -- Scott Kitterman <scott@kitterman.com>  Sat, 14 Jan 2023 18:26:42 -0500
+
+python-resolvelib (0.9.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Bump standards-version to 4.6.1 without further change
+  * Add pybuild-plugin-pyproject to build using pyproject plugin
+  * Add lintian overrides for privacy-breach-generic since it is for examples
+
+ -- Scott Kitterman <scott@kitterman.com>  Tue, 22 Nov 2022 17:27:07 -0500
+
+python-resolvelib (0.8.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add python3-commentjson and python3-pytest to build-depends so tests are
+    run during build
+  * Add python3-commentjson to test depends and update autopkgtest so
+    cocoapods tests are run during autopkgtest
+  * Bump standards-version to 4.6.0 without further change
+
+ -- Scott Kitterman <scott@kitterman.com>  Mon, 29 Nov 2021 01:58:38 -0500
+
 python-resolvelib (0.5.4-1) unstable; urgency=medium
 
   [ Stefano Rivera ]

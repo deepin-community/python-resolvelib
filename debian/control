@@ -3,11 +3,14 @@ Section: python
 Priority: optional
 Maintainer: Debian Python Team <team+python@tracker.debian.org>
 Uploaders: Scott Kitterman <scott@kitterman.com>
-Standards-Version: 4.5.0
+Standards-Version: 4.6.2
 Build-Depends:
  debhelper-compat (= 12),
  dh-python,
+ pybuild-plugin-pyproject,
  python3-all,
+ python3-commentjson,
+ python3-pytest,
  python3-setuptools,
 Homepage: https://github.com/sarugaku/resolvelib
 Vcs-Git: https://salsa.debian.org/python-team/packages/python-resolvelib.git

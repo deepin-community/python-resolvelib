@@ -7,15 +7,16 @@ from platform import python_version
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
-import requests
 import html5lib
-from packaging.specifiers import SpecifierSet
-from packaging.version import Version, InvalidVersion
+import requests
 from packaging.requirements import Requirement
+from packaging.specifiers import SpecifierSet
 from packaging.utils import canonicalize_name
+from packaging.version import InvalidVersion, Version
+
 from resolvelib import BaseReporter, Resolver
 
-from extras_provider import ExtrasProvider
+from .extras_provider import ExtrasProvider
 
 PYTHON_VERSION = Version(python_version())
 
@@ -121,25 +122,26 @@ class PyPIProvider(ExtrasProvider):
     def get_base_requirement(self, candidate):
         return Requirement("{}=={}".format(candidate.name, candidate.version))
 
-    def get_preference(self, resolution, candidates, information):
-        return len(candidates)
+    def get_preference(self, identifier, resolutions, candidates, information):
+        return sum(1 for _ in candidates[identifier])
 
-    def find_matches(self, requirements):
-        assert requirements, "resolver promises at least one requirement"
+    def find_matches(self, identifier, requirements, incompatibilities):
+        requirements = list(requirements[identifier])
         assert not any(
-            r.extras for r in requirements[1:]
+            r.extras for r in requirements
         ), "extras not supported in this example"
 
-        name = canonicalize_name(requirements[0].name)
+        bad_versions = {c.version for c in incompatibilities[identifier]}
 
         # Need to pass the extras to the search, so they
         # are added to the candidate at creation - we
         # treat candidates as immutable once created.
-        candidates = []
-        for c in get_project_from_pypi(name, set()):
-            version = c.version
-            if all(version in r.specifier for r in requirements):
-                candidates.append(c)
+        candidates = (
+            candidate
+            for candidate in get_project_from_pypi(identifier, set())
+            if candidate.version not in bad_versions
+            and all(candidate.version in r.specifier for r in requirements)
+        )
         return sorted(candidates, key=attrgetter("version"), reverse=True)
 
     def is_satisfied_by(self, requirement, candidate):

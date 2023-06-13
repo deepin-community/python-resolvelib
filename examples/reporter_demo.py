@@ -1,4 +1,5 @@
 from collections import namedtuple
+
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
@@ -72,17 +73,17 @@ class Provider(resolvelib.AbstractProvider):
     def identify(self, requirement_or_candidate):
         return requirement_or_candidate.name
 
-    def get_preference(self, resolution, candidates, information):
-        return len(candidates)
+    def get_preference(self, identifier, resolutions, candidates, information):
+        return sum(1 for _ in candidates[identifier])
 
-    def find_matches(self, requirement):
-        deps = list(
-            filter(
-                lambda candidate: self.is_satisfied_by(requirement, candidate),
-                sorted(self.candidates),
-            )
+    def find_matches(self, identifier, requirements, incompatibilities):
+        name = identifier
+        return sorted(
+            c
+            for c in self.candidates
+            if all(self.is_satisfied_by(r, c) for r in requirements[name])
+            and all(c.version != i.version for i in incompatibilities[name])
         )
-        return deps
 
     def is_satisfied_by(self, requirement, candidate):
         return (
