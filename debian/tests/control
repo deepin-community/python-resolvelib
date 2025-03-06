@@ -1,3 +1,3 @@
 Tests: run-pytest
-Depends: @, python3-all, python3-pytest
+Depends: @, python3-all, python3-pytest, python3-commentjson
 Restrictions: allow-stderr

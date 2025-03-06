@@ -1,3 +1,64 @@
+python-resolvelib (1.1.0-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release.
+
+ -- Boyuan Yang <byang@debian.org>  Thu, 31 Oct 2024 20:22:39 -0400
+
+python-resolvelib (1.0.1-2) unstable; urgency=medium
+
+  * debian/control: Use dh-sequence-python3.
+
+  [ Scott Kitterman ]
+  * Add d/source/options extend-diff-ignore to fix dpkg-source failure due to
+    local changes (python package metadata regeneration) (Closes: #1047492)
+  * Remove myself from uploaders
+
+  [ Stefano Rivera ]
+  * Add myself as an uploader.
+
+ -- Boyuan Yang <byang@debian.org>  Wed, 23 Oct 2024 18:33:42 -0400
+
+python-resolvelib (1.0.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop d/patch/fix_tests.patch, issue resolved a different way upstream
+  * Drop hint-testsuite-triggers since upstream no longer uses packaging in
+    tests
+
+ -- Scott Kitterman <scott@kitterman.com>  Mon, 12 Jun 2023 00:09:03 -0400
+
+python-resolvelib (0.9.0-2) unstable; urgency=medium
+
+  * Add d/patch/fix_tests.patch to remediate inappropriate test failures
+    caused by changes in python-packaging (Closes: #1027606)
+  * Add hint-testsuite-triggers to d/tests/control so that if
+    python3-packaging is updated, python-resolvelib autopkgtest will be
+    triggered
+  * Bump standards-version to 4.6.2 without further change
+
+ -- Scott Kitterman <scott@kitterman.com>  Sat, 14 Jan 2023 18:26:42 -0500
+
+python-resolvelib (0.9.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Bump standards-version to 4.6.1 without further change
+  * Add pybuild-plugin-pyproject to build using pyproject plugin
+  * Add lintian overrides for privacy-breach-generic since it is for examples
+
+ -- Scott Kitterman <scott@kitterman.com>  Tue, 22 Nov 2022 17:27:07 -0500
+
+python-resolvelib (0.8.1-1) unstable; urgency=medium
+
+  * New upstream release
+  * Add python3-commentjson and python3-pytest to build-depends so tests are
+    run during build
+  * Add python3-commentjson to test depends and update autopkgtest so
+    cocoapods tests are run during autopkgtest
+  * Bump standards-version to 4.6.0 without further change
+
+ -- Scott Kitterman <scott@kitterman.com>  Mon, 29 Nov 2021 01:58:38 -0500
+
 python-resolvelib (0.5.4-1) unstable; urgency=medium
 
   [ Stefano Rivera ]

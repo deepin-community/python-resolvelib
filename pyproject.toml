@@ -1,9 +1,59 @@
-[build-system]
-requires = ['setuptools>=36.2.2', 'wheel>=0.28.0']
+[project]
+name = "resolvelib"
+dynamic = ["version"]
+description = "Resolve abstract dependencies into concrete ones"
+authors = [
+    {name = "Tzu-ping Chung", email = "uranusjr@gmail.com"},
+]
+dependencies = []
+requires-python = ">=3.7"
+readme = "README.rst"
+license = {text = "ISC License"}
+keywords = ["dependency", "resolution"]
+classifiers = [
+	"Development Status :: 3 - Alpha",
+	"Intended Audience :: Developers",
+	"License :: OSI Approved :: ISC License (ISCL)",
+	"Operating System :: OS Independent",
+	"Programming Language :: Python :: 3",
+	"Topic :: Software Development :: Libraries :: Python Modules",
 
-[tool.black]
-line-length = 79
-include = '^/(docs|examples|src|tasks|tests)/.+\.py$'
+]
+
+[project.urls]
+Homepage = "https://github.com/sarugaku/resolvelib"
+
+[project.optional-dependencies]
+lint = [
+    "ruff",
+    "mypy",
+    "types-requests",
+]
+test = [
+    "packaging",
+    "pytest",
+]
+release = [
+    "build",
+    "towncrier",
+    "twine",
+]
+
+[build-system]
+requires = ['setuptools>=62', 'wheel']
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages]
+find = {where = ["src"], namespaces = false}
+
+[tool.setuptools.dynamic]
+version = {attr = "resolvelib.__version__"}
+
+[tool.distutils.bdist_wheel]
+universal = true
 
 [tool.towncrier]
 package = 'resolvelib'
@@ -28,3 +78,34 @@ showcontent = true
 directory = 'trivial'
 name = 'Trivial Changes'
 showcontent = false
+
+[tool.ruff]
+src = ["src"]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["C","E","F","W","B","RUF","PLE","PLW","I","TCH","FA"]
+ignore = ["PLW2901"]
+exclude = [
+	".git",
+	".venv",
+	".venvs",
+	".nox",
+	"__pycache__",
+	"build",
+	"dist",
+	"*.pyi"
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.mypy]
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "html5lib",
+    "packaging.*"
+]
+ignore_missing_imports = true

@@ -5,9 +5,7 @@ import os
 
 import pytest
 
-from resolvelib.providers import AbstractProvider
-from resolvelib.resolvers import Resolver
-
+from resolvelib import AbstractProvider, Resolver
 
 Requirement = collections.namedtuple("Requirement", "container constraint")
 Candidate = collections.namedtuple("Candidate", "container version")
@@ -67,8 +65,7 @@ class SwiftInputProvider(AbstractProvider):
             input_data = json.load(f)
 
         self.containers = {
-            container["identifier"]: container
-            for container in input_data["containers"]
+            container["identifier"]: container for container in input_data["containers"]
         }
         self.root_requirements = [
             Requirement(self.containers[constraint["identifier"]], constraint)
@@ -79,25 +76,35 @@ class SwiftInputProvider(AbstractProvider):
     def identify(self, requirement_or_candidate):
         return requirement_or_candidate.container["identifier"]
 
-    def get_preference(self, resolution, candidates, information):
-        return len(candidates)
+    def get_preference(
+        self,
+        identifier,
+        resolutions,
+        candidates,
+        information,
+        backtrack_causes,
+    ):
+        return sum(1 for _ in candidates[identifier])
 
-    def _iter_matches(self, requirements):
-        container = requirements[0].container
+    def _iter_matches(self, identifier, requirements, incompatibilities):
+        bad_versions = {c.version for c in incompatibilities[identifier]}
+        container = next(requirements[identifier]).container
         for version in container["versions"]:
+            if version in bad_versions:
+                continue
             ver = _parse_version(version)
             satisfied = all(
                 _is_version_allowed(ver, r.constraint["requirement"])
-                for r in requirements
+                for r in requirements[identifier]
             )
             if not satisfied:
                 continue
             preference = _calculate_preference(ver)
             yield (preference, Candidate(container, version))
 
-    def find_matches(self, requirements):
+    def find_matches(self, identifier, requirements, incompatibilities):
         matches = sorted(
-            self._iter_matches(requirements),
+            self._iter_matches(identifier, requirements, incompatibilities),
             key=operator.itemgetter(0),
             reverse=True,
         )
@@ -132,8 +139,8 @@ def provider(request):
     return SwiftInputProvider(request.param)
 
 
-def test_resolver(provider, base_reporter):
-    resolver = Resolver(provider, base_reporter)
+def test_resolver(provider, reporter):
+    resolver = Resolver(provider, reporter)
     result = resolver.resolve(provider.root_requirements)
 
     display = {

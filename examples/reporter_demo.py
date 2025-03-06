@@ -1,4 +1,5 @@
 from collections import namedtuple
+
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
@@ -25,18 +26,14 @@ third 3.0.0
 """
 
 
-class Requirement(namedtuple("Requirement", "name specifier")):  # noqa
+class Requirement(namedtuple("Requirement", "name specifier")):
     def __repr__(self):
-        return "<Requirement({name}{specifier})>".format(
-            name=self.name, specifier=self.specifier
-        )
+        return f"<Requirement({self.name}{self.specifier})>"
 
 
-class Candidate(namedtuple("Candidate", "name version")):  # noqa
+class Candidate(namedtuple("Candidate", "name version")):
     def __repr__(self):
-        return "<{name}=={version}>".format(
-            name=self.name, version=self.version
-        )
+        return f"<{self.name}=={self.version}>"
 
 
 def splitstrip(s, parts):
@@ -56,9 +53,7 @@ def read_spec(lines):
             candidates[latest] = set()
         else:
             if latest is None:
-                raise RuntimeError(
-                    "Spec has dependencies before first candidate"
-                )
+                raise RuntimeError("Spec has dependencies before first candidate")
             name, specifier = splitstrip(line, 2)
             specifier = SpecifierSet(specifier)
             candidates[latest].add(Requirement(name, specifier))
@@ -72,17 +67,24 @@ class Provider(resolvelib.AbstractProvider):
     def identify(self, requirement_or_candidate):
         return requirement_or_candidate.name
 
-    def get_preference(self, resolution, candidates, information):
-        return len(candidates)
+    def get_preference(
+        self,
+        identifier,
+        resolutions,
+        candidates,
+        information,
+        backtrack_causes,
+    ):
+        return sum(1 for _ in candidates[identifier])
 
-    def find_matches(self, requirement):
-        deps = list(
-            filter(
-                lambda candidate: self.is_satisfied_by(requirement, candidate),
-                sorted(self.candidates),
-            )
+    def find_matches(self, identifier, requirements, incompatibilities):
+        name = identifier
+        return sorted(
+            c
+            for c in self.candidates
+            if all(self.is_satisfied_by(r, c) for r in requirements[name])
+            and all(c.version != i.version for i in incompatibilities[name])
         )
-        return deps
 
     def is_satisfied_by(self, requirement, candidate):
         return (
