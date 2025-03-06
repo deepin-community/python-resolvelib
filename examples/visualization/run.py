@@ -1,9 +1,9 @@
 import re
 import sys
 
-from reporter_demo import Candidate, Requirement
-from visualization.generate import generate_html
-from visualization.reporter import GraphGeneratingReporter
+from ..reporter_demo import Candidate, Requirement
+from .generate import generate_html
+from .reporter import GraphGeneratingReporter
 
 
 def process_arguments(function, args):
@@ -25,9 +25,7 @@ def process_arguments(function, args):
             to_convert, _, args = args.partition(", ")
             value = int(to_convert)
         elif arg_type == "requirement":
-            match = re.match(
-                r"^<Requirement\('?([\w\-\._~]+)(.*?)'?\)>(.*)", args
-            )
+            match = re.match(r"^<Requirement\('?([\w\-\._~]+)(.*?)'?\)>(.*)", args)
             assert match, repr(args)
             name, spec, args = match.groups()
             value = Requirement(name, spec)

@@ -1,3 +1,12 @@
+# /// script
+# requires-python = ">=3.7"
+# dependencies = [
+#   "requests",
+#   "packaging",
+#   "html5lib"
+# ]
+# ///
+
 """Freeze metadata from Python index server to test locally.
 
 Inspired by index_from_rubygems.rb from CocoaPods/Resolver-Integration-Specs.
@@ -18,9 +27,9 @@ import logging
 import os
 import pathlib
 import re
-import urllib.parse
 import sys
-import zipfile
+import urllib.parse
+from typing import Dict, Iterable, Iterator, List, NamedTuple, Tuple, Union
 
 import html5lib
 import packaging.requirements
@@ -28,22 +37,6 @@ import packaging.tags
 import packaging.utils
 import packaging.version
 import requests
-
-from typing import (
-    BinaryIO,
-    Dict,
-    IO,
-    Iterable,
-    Iterator,
-    List,
-    NamedTuple,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-    cast,
-)
-
 
 logger = logging.getLogger()
 
@@ -60,7 +53,7 @@ def _parse_python_version(s: str) -> PythonVersion:
     return (int(major),)
 
 
-def _parse_output_path(s: str) -> Optional[pathlib.Path]:
+def _parse_output_path(s: str) -> pathlib.Path | None:
     if s == "-":
         return None
     if os.sep in s or (os.altsep and os.altsep in s):
@@ -68,7 +61,7 @@ def _parse_output_path(s: str) -> Optional[pathlib.Path]:
     return pathlib.Path(__file__).with_name("inputs").joinpath("index", s)
 
 
-def parse_args(args: Optional[List[str]]) -> argparse.Namespace:
+def parse_args(args: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "package_names",
@@ -114,26 +107,26 @@ def get_output_path(path: pathlib.Path, overwrite: bool) -> pathlib.Path:
     return path
 
 
-def _parse_tag(s: str) -> Set[packaging.tags.Tag]:
+def _parse_tag(s: str) -> frozenset[packaging.tags.Tag]:
     try:
         return packaging.tags.parse_tag(s)
-    except ValueError:
-        raise ValueError(f"invalid tag {s!r}")
+    except ValueError as e:
+        raise ValueError(f"invalid tag {s!r}") from e
 
 
 @dataclasses.dataclass()
 class WheelMatcher:
-    required_python: Optional[packaging.version.Version]
-    tags: Dict[packaging.tags.Tag, int]
+    required_python: packaging.version.Version
+    tags: dict[packaging.tags.Tag, int]
 
     @classmethod
     def compatible_with(
         cls,
         python_version: PythonVersion,
-        impl: Optional[str],
-        plats: Optional[List[str]],
+        impl: str | None,
+        plats: list[str] | None,
     ) -> WheelMatcher:
-        required_python = packaging.version.parse(
+        required_python = packaging.version.Version(
             ".".join(str(v) for v in python_version)
         )
         # TODO: Add ABI customization.
@@ -144,7 +137,7 @@ class WheelMatcher:
         tags = {t: i for i, t in enumerate(tag_it)}
         return cls(required_python, tags)
 
-    def rank(self, tag: str, requires_python: Optional[str]) -> Optional[int]:
+    def rank(self, tag: str, requires_python: str | None) -> int | None:
         if requires_python:
             spec = packaging.specifiers.SpecifierSet(requires_python)
             if self.required_python not in spec:
@@ -193,24 +186,15 @@ class HttpFile:
         return self._offset
 
 
-def _parse_wheel_name(rest: str) -> Tuple[str, str, str]:
+def _parse_wheel_name(rest: str) -> tuple[str, str, str]:
     name, rest = rest.split("-", 1)
     version, x, y, z = rest.rsplit("-", 3)
     return name, version, f"{x}-{y}-{z}"
 
 
-def _open_metadata(zf: zipfile.ZipFile, prefix: str) -> IO[bytes]:
-    for fn in zf.namelist():
-        if not fn.endswith(".dist-info/METADATA"):
-            continue
-        if packaging.utils.canonicalize_name(fn).startswith(prefix):
-            return zf.open(fn)
-    raise ValueError("Can't find metadata")
-
-
 class PackageEntry(NamedTuple):
     version: str
-    dependencies: List[str]
+    dependencies: list[str]
 
 
 DistListMapping = Dict[str, List[Tuple[int, str]]]
@@ -218,14 +202,16 @@ DistListMapping = Dict[str, List[Tuple[int, str]]]
 
 @dataclasses.dataclass()
 class Finder:
-    index_urls: List[str]
+    index_urls: list[str]
     matcher: WheelMatcher
     session: requests.Session
 
-    def collect_best_dist_urls(self, name: str) -> Dict[str, str]:
+    def collect_best_metadta_urls(self, name: str) -> dict[str, str]:
         all_dists: DistListMapping = collections.defaultdict(list)
         for index_url in self.index_urls:
             res = requests.get(f"{index_url}/{name}")
+            if res.status_code == 404:
+                logger.critical("Project %s does not exist", name)
             res.raise_for_status()
             doc = html5lib.parse(res.content, namespaceHTMLElements=False)
             for el in doc.findall(".//a"):
@@ -248,24 +234,24 @@ class Finder:
                     continue
                 if rank is None:
                     continue
+
+                url = urllib.parse.urljoin(
+                    url, urllib.parse.urlparse(url).path + ".metadata"
+                )
                 all_dists[version].append((rank, url))
         urls = {version: min(dists)[1] for version, dists in all_dists.items()}
         logger.info("%d URLs found for %s", len(urls), name)
         return urls
 
     def iter_package_entries(self, name: str) -> Iterator[PackageEntry]:
-        for version, url in self.collect_best_dist_urls(name).items():
-            http_file = cast(IO[bytes], HttpFile(url, self.session))
-            with zipfile.ZipFile(http_file) as zf:
-                with _open_metadata(zf, name) as f:
-                    parser = email.parser.BytesParser()
-                    data = parser.parse(cast(BinaryIO, f), headersonly=True)
-            dependencies: List[str] = data.get_all("Requires-Dist", [])
+        for version, url in self.collect_best_metadta_urls(name).items():
+            http_file = HttpFile(url, self.session)
+            parser = email.parser.BytesParser()
+            data = parser.parsebytes(http_file.read(), headersonly=True)
+            dependencies: list[str] = data.get_all("Requires-Dist", [])
             yield PackageEntry(version, dependencies)
 
-    def process_package_entry(
-        self, name: str, entry: PackageEntry
-    ) -> Optional[Set[str]]:
+    def process_package_entry(self, name: str, entry: PackageEntry) -> set[str] | None:
         more = set()
         for dep in entry.dependencies:
             try:
@@ -278,16 +264,16 @@ class Finder:
                     dep,
                 )
                 return None
-            more.add(packaging.utils.canonicalize_name(req.name))
+            more.add(str(packaging.utils.canonicalize_name(req.name)))
         return more
 
     def find(self, package_names: Iterable[str]) -> dict:
         data = {}
         while package_names:
-            more: Set[str] = set()
+            more: set[str] = set()
             logger.info("Discovering %s", ", ".join(package_names))
             for name in package_names:
-                entries: Dict[str, dict] = {}
+                entries: dict[str, dict] = {}
                 for e in self.iter_package_entries(name):
                     result = self.process_package_entry(name, e)
                     if result is None:
@@ -299,10 +285,10 @@ class Finder:
         return data
 
 
-def main(args: Optional[List[str]]) -> int:
+def main(args: list[str] | None) -> int:
     options = parse_args(args)
     if not options.output:
-        output_path: Optional[pathlib.Path] = None
+        output_path: pathlib.Path | None = None
     else:
         output_path = get_output_path(options.output, options.overwrite)
     matcher = WheelMatcher.compatible_with(

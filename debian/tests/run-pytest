@@ -8,8 +8,6 @@ set -e
 mkdir -p xxx
 cp -a tests xxx/
 cd xxx
-# Until python3-commentjson is in the archive:
-rm -rf tests/functional/cocoapods
 
 # Test for all supported python3 versions so we find out if there are any
 # issues with a new python3 version before it is the default version.

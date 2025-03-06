@@ -1,1 +1,15 @@
-.pc/
+__pycache__
+*.py[co]
+
+.pytest_cache
+.venv
+.nox
+.vscode
+.mypy_cache
+venv/
+
+build
+dist
+pip-wheel-metadata
+
+*.egg-info
